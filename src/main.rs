@@ -2,38 +2,55 @@
 //
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-use getopt::Opt;
+#[macro_use]
+extern crate clap;
+use clap::{ App, Arg, ArgGroup };
 
 fn main() {
-        let args: Vec<String> = std::env::args().collect();
-
-        let mut opts = getopt::Parser::new(&args, "f:r:p:h");
-
-        let mut file = String::new();
-        let mut pattern = String::new();
-        let mut sub = String::new();
-        let mut help = false;
-
-        loop {
-                match opts
-                        .next()
-                        .transpose()
-                        .expect("ERROR 3: Could not parse arguments!")
-                {
-                        None => break,
-                        Some(opt) => match opt {
-                                Opt('f', Some(arg)) => file = arg.clone(),
-                                Opt('p', Some(arg)) => pattern = arg.clone(),
-                                Opt('r', Some(arg)) => sub = arg.clone(),
-                                Opt('h', None) => help = true,
-                                _ => unreachable!(),
-                        },
-                }
-        }
-
-        if help || pattern.is_empty() {
-                print_usage(&args[0]);
-        } else if file.is_empty() {
+        let matches = App::new(crate_name!())
+                .version(crate_version!())
+                .author(crate_authors!())
+                .about(crate_description!())
+                .arg(Arg::with_name("PATTERN")
+                        .index(1)
+                        .takes_value(true)
+                        .help("The pattern that the line that should be replaced must contain")
+                )
+                .arg(Arg::with_name("pattern")
+                        .takes_value(true)
+                        .short("p")
+                        .long("-pattern")
+                        .help("The pattern that the line that should be replaced must contain")
+                )
+                .arg(Arg::with_name("REPLACEMENT")
+                        .takes_value(true)
+                        .index(2)
+                        .help("The line that any matched line should be replaced with")
+                )
+                .arg(Arg::with_name("replacement")
+                        .takes_value(true)
+                        .short("r")
+                        .long("-replacement")
+                        .help("The line that any matched line shoud be replaced with")
+                )
+                .arg(Arg::with_name("file")
+                        .takes_value(true)
+                        .short("f")
+                        .long("-file")
+                        .help("Read from this file. If not given, read from stdin instead.")
+                )
+                .group(ArgGroup::with_name("patterns")
+                        .args(&["PATTERN", "pattern"])
+                        .required(true))
+                .group(ArgGroup::with_name("replacements")
+                        .args(&["REPLACEMENT", "replacement"]))
+                .get_matches();
+    
+        let file = matches.value_of("file").unwrap_or("").to_string();
+        let pattern = matches.value_of("patterns").unwrap_or("").to_string();
+        let replacement = matches.value_of("replacemnts").unwrap_or("").to_string();
+        
+        if !pattern.is_empty() && file.is_empty() {
                 let mut v: Vec<String> = vec![];
 
                 loop {
@@ -48,9 +65,9 @@ fn main() {
                                 break;
                         }
 
-                        if !sub.is_empty() {
+                        if !replacement.is_empty() {
                                 if input.contains(&pattern) {
-                                        v.push(sub.clone());
+                                        v.push(replacement.clone());
                                 } else {
                                         v.push(input);
                                 }
@@ -73,7 +90,7 @@ fn main() {
                         let v = replace(
                                 split(input),
                                 pattern.clone(),
-                                sub.clone(),
+                                replacement.clone(),
                         );
 
                         for line in v {
@@ -81,10 +98,6 @@ fn main() {
                         }
                 }
         }
-}
-
-fn print_usage(s: &str) {
-        println!("{} -p PATTERN [-r REPLACER] [-f FILE]", s);
 }
 
 fn split(s: String) -> Vec<String> {
@@ -99,13 +112,13 @@ fn split(s: String) -> Vec<String> {
         splits
 }
 
-fn replace(src: Vec<String>, pattern: String, sub: String) -> Vec<String> {
+fn replace(src: Vec<String>, pattern: String, replacement: String) -> Vec<String> {
         let mut v: Vec<String> = vec![];
 
         for line in src {
-                if !sub.is_empty() {
+                if !replacement.is_empty() {
                         if line.contains(&pattern) {
-                                v.push(sub.clone());
+                                v.push(replacement.clone());
                         } else {
                                 v.push(line);
                         }
