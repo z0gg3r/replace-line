@@ -1,4 +1,4 @@
 # replace-line
 
-A simple tool that reads input and a string and prints every line from the
-input, except for those that contain the string.
+A simple shell script that replaces every occurence of a pattern in a text with
+nothing or something.
