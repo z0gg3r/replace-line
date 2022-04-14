@@ -27,10 +27,36 @@ die()
 	exit 1
 }
 
-if [ "$#" -lt 2 ]
+if [ "$#" -eq 1 ]
 then
-	print_usage
-	exit 1
+	while read -r line
+	do
+		case $line in
+			*$1*) true ;;
+			*) echo "$line" ;;
+		esac
+	done
+elif [ "$#" -eq 2 ]
+then
+	if [ -f "$1" ]
+	then
+		cat "$1" | while read -r line
+		do
+			case $line in
+				*$2*) true ;;
+				*) echo "$line"
+			esac
+		done
+	else
+		while read -r line
+		do
+			case $line in
+				*$1*) replace_line "$2" ;;
+				*) echo "$line" ;;
+			esac
+		done
+	fi
+	true
 elif [ -e "$1" ]
 then
 	cat "$1" | while read -r line
@@ -41,5 +67,6 @@ then
 		esac
 	done
 else
+	print_usage
 	die "$1 does not exist."
 fi
