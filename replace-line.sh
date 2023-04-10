@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 # SPDX-FileCopyRightText: 2022 zocker <zocker@10zen.eu>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
